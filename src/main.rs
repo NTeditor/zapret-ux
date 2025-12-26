@@ -1,6 +1,10 @@
+mod config;
+
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+
+use crate::config::Config;
 
 #[cfg(target_os = "android")]
 const DEFAULT_CONFIG_PATH: &str = "/data/adb/zapret-ux/config.toml";
@@ -27,5 +31,8 @@ enum Commands {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+    let Cli { config, command } = cli;
+    let config: Config = confy::load_path(config)?;
+    println!("{:#?}", config);
     Ok(())
 }

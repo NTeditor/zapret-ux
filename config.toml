@@ -1,0 +1,6 @@
+[nfqws]
+binary_path = "/tmp/nfqws"
+args = []
+
+[iptables]
+binary_path = "/usr/bin/iptables"
