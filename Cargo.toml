@@ -8,4 +8,9 @@ anyhow = { version = "1.0.100", features = ["backtrace"] }
 camino = { version = "1.2.2", features = ["serde1"] }
 clap = { version = "4.5.53", features = ["derive"] }
 confy = "2.0.0"
+iptables = { version = "0.1.0", path = "crates/iptables" }
+nfqws = { version = "0.1.0", path = "crates/nfqws" }
 serde = { version = "1.0.228", features = ["derive"] }
+
+[workspace]
+members = ["crates/iptables", "crates/nfqws"]
