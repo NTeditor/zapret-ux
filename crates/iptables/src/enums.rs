@@ -26,7 +26,7 @@ impl PortSpec {
     pub fn new(port: Port, protocol: Protocol) -> Self {
         tracing::debug!(
             port = port.to_string(),
-            protocol = protocol.as_ref(),
+            protocol = protocol.to_str(),
             "Creating new PortSpec instance"
         );
         Self { port, protocol }
@@ -46,8 +46,8 @@ impl Display for Port {
     }
 }
 
-impl AsRef<str> for Protocol {
-    fn as_ref(&self) -> &str {
+impl Protocol {
+    pub fn to_str(&self) -> &str {
         match self {
             Self::Tcp => "tcp",
             Self::Udp => "udp",
@@ -57,7 +57,7 @@ impl AsRef<str> for Protocol {
 
 impl Display for Protocol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.as_ref())
+        write!(f, "{}", self.to_str())
     }
 }
 

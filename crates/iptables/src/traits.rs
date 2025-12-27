@@ -12,86 +12,86 @@ pub trait IptablesBinding: Debug {
     ///
     /// # Args
     /// * `module` - Extension name
-    fn module<S: AsRef<str>>(&mut self, extension: S) -> &mut Self;
+    fn module(&mut self, extension: &str) -> &mut Self;
 
     /// Insert in chain as rulenum
     ///
     /// # Args
     /// * `chain` - Chain name
-    fn insert<S: AsRef<str>>(&mut self, chain: S) -> &mut Self;
+    fn insert(&mut self, chain: &str) -> &mut Self;
 
     /// Create a new user-defined chain
     ///
     /// # Args
     /// * `chain` - Chain name
-    fn new_chain<S: AsRef<str>>(&mut self, chain: S) -> &mut Self;
+    fn new_chain(&mut self, chain: &str) -> &mut Self;
 
     /// Delete a user-defined chain
     ///
     /// # Args
     /// * `chain` - Chain name
-    fn delete_chain<S: AsRef<str>>(&mut self, chain: S) -> &mut Self;
+    fn delete_chain(&mut self, chain: &str) -> &mut Self;
 
     /// Delete all rules in  chain
     ///
     /// # Args
     /// * `chain` - Chain name
-    fn flush<S: AsRef<str>>(&mut self, chain: S) -> &mut Self;
+    fn flush(&mut self, chain: &str) -> &mut Self;
 
     /// Delete matching rule from chain
     ///
     /// # Args
     /// * `chain` - Chain name
-    fn delete<S: AsRef<str>>(&mut self, chain: S) -> &mut Self;
+    fn delete(&mut self, chain: &str) -> &mut Self;
 
     /// Table to manipulate
     ///
     /// # Args
     /// * `chain` - Chain name
-    fn table<S: AsRef<str>>(&mut self, table: S) -> &mut Self;
+    fn table(&mut self, table: &str) -> &mut Self;
 
     /// Specify protocol type (tcp, udp, icmp, etc.)
     ///
     /// # Args
     /// * `proto` - protocol name
-    fn protocol<S: AsRef<str>>(&mut self, proto: S) -> &mut Self;
+    fn protocol(&mut self, proto: &str) -> &mut Self;
 
     /// Target for rule (may load target extension)
     ///
     /// # Args
     /// * `target` - target name
-    fn jump<S: AsRef<str>>(&mut self, target: S) -> &mut Self;
+    fn jump(&mut self, target: &str) -> &mut Self;
 
     /// Destination port
     ///
     /// # Args
     /// * `port` - port ("80") or port range ("22:80")
-    fn dport<S: AsRef<str>>(&mut self, port: S) -> &mut Self;
+    fn dport(&mut self, port: &str) -> &mut Self;
 
     /// Match nfmark value with optional mask
     ///
     /// # Args
     /// * `value` - mark value with optional mask (e.g., "0x1", "0x40000000/0x40000000")
     /// * `invert` - when true, matches everything EXCEPT specified mark
-    fn mark<S: AsRef<str>>(&mut self, value: S, invert: Option<bool>) -> &mut Self;
+    fn mark(&mut self, value: &str, invert: Option<bool>) -> &mut Self;
 
     /// Match by connection bytes
     ///
     /// # Args
     /// * `value` - byte/packet range (e.g., "1:6", "1048576:")
-    fn connbytes<S: AsRef<str>>(&mut self, value: S, invert: Option<bool>) -> &mut Self;
+    fn connbytes(&mut self, value: &str, invert: Option<bool>) -> &mut Self;
 
     /// Set connection bytes direction
     ///
     /// # Args
     /// * `value` - direction: "original", "reply", or "both"
-    fn connbytes_dir<S: AsRef<str>>(&mut self, value: S) -> &mut Self;
+    fn connbytes_dir(&mut self, value: &str) -> &mut Self;
 
     /// Set connection bytes counting mode
     ///
     /// # Args
     /// * `value` - connbytes mode name
-    fn connbytes_mode<S: AsRef<str>>(&mut self, value: S) -> &mut Self;
+    fn connbytes_mode(&mut self, value: &str) -> &mut Self;
 
     /// Send packet to QUEUE number
     ///

@@ -53,9 +53,9 @@ where
         binding
             .table("mangle")
             .insert(CHAIN_NAME)
-            .protocol(port_spec.protocol)
-            .module(port_spec.protocol)
-            .dport(port_spec.port.to_string())
+            .protocol(port_spec.protocol.to_str())
+            .module(port_spec.protocol.to_str())
+            .dport(&port_spec.port.to_string())
             .jump("NFQUEUE")
             .queue_num(QUEUE_NUM)
             .queue_bypass();

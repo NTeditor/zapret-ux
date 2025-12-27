@@ -2,6 +2,22 @@ use super::*;
 use anyhow::Result;
 use std::process::Command;
 
+macro_rules! add_value_flag {
+    ($name:ident, $flag:expr) => {
+        fn $name(&mut self, value: &str) -> &mut Self {
+            tracing::info!(
+                flag = $flag,
+                value = value,
+                "Add {} flag to iptables command",
+                stringify!($name),
+            );
+            self.arg($flag);
+            self.arg(value);
+            self
+        }
+    };
+}
+
 #[derive(Debug)]
 pub struct IptablesCmd {
     path: String,
@@ -24,69 +40,6 @@ impl IptablesCmd {
 }
 
 impl IptablesBinding for IptablesCmd {
-    fn module<S: AsRef<str>>(&mut self, module: S) -> &mut Self {
-        let module = module.as_ref();
-        self.arg("--match");
-        self.arg(module);
-        self
-    }
-
-    fn insert<S: AsRef<str>>(&mut self, chain: S) -> &mut Self {
-        let chain = chain.as_ref();
-        self.arg("--insert");
-        self.arg(chain);
-        self
-    }
-
-    fn new_chain<S: AsRef<str>>(&mut self, chain: S) -> &mut Self {
-        let chain = chain.as_ref();
-        self.arg("--new");
-        self.arg(chain);
-        self
-    }
-
-    fn delete_chain<S: AsRef<str>>(&mut self, chain: S) -> &mut Self {
-        let chain = chain.as_ref();
-        self.arg("--delete-chain");
-        self.arg(chain);
-        self
-    }
-
-    fn delete<S: AsRef<str>>(&mut self, chain: S) -> &mut Self {
-        let chain = chain.as_ref();
-        self.arg("--delete");
-        self.arg(chain);
-        self
-    }
-
-    fn flush<S: AsRef<str>>(&mut self, chain: S) -> &mut Self {
-        let chain = chain.as_ref();
-        self.arg("--flush");
-        self.arg(chain);
-        self
-    }
-
-    fn table<S: AsRef<str>>(&mut self, table: S) -> &mut Self {
-        let table = table.as_ref();
-        self.arg("--table");
-        self.arg(table);
-        self
-    }
-
-    fn protocol<S: AsRef<str>>(&mut self, proto: S) -> &mut Self {
-        let proto = proto.as_ref();
-        self.arg("--protocol");
-        self.arg(proto);
-        self
-    }
-
-    fn jump<S: AsRef<str>>(&mut self, target: S) -> &mut Self {
-        let target = target.as_ref();
-        self.arg("--jump");
-        self.arg(target);
-        self
-    }
-
     fn run(self) -> Result<(), BindingError> {
         let mut cmd = Command::new(&self.path);
         tracing::info!(
@@ -128,15 +81,18 @@ impl IptablesBinding for IptablesCmd {
         Ok(())
     }
 
-    fn dport<S: AsRef<str>>(&mut self, port: S) -> &mut Self {
-        let port = port.as_ref();
-        self.arg("--dport");
-        self.arg(port);
-        self
-    }
+    add_value_flag!(module, "--match");
+    add_value_flag!(insert, "--insert");
+    add_value_flag!(new_chain, "--new");
+    add_value_flag!(delete_chain, "--delete-chain");
+    add_value_flag!(delete, "--delete");
+    add_value_flag!(flush, "--flush");
+    add_value_flag!(table, "--table");
+    add_value_flag!(protocol, "--protocol");
+    add_value_flag!(jump, "--jump");
+    add_value_flag!(dport, "--dport");
 
-    fn mark<S: AsRef<str>>(&mut self, value: S, invert: Option<bool>) -> &mut Self {
-        let value = value.as_ref();
+    fn mark(&mut self, value: &str, invert: Option<bool>) -> &mut Self {
         if let Some(true) = invert {
             self.arg("!");
         }
@@ -145,8 +101,7 @@ impl IptablesBinding for IptablesCmd {
         self
     }
 
-    fn connbytes<S: AsRef<str>>(&mut self, value: S, invert: Option<bool>) -> &mut Self {
-        let value = value.as_ref();
+    fn connbytes(&mut self, value: &str, invert: Option<bool>) -> &mut Self {
         if let Some(true) = invert {
             self.arg("!");
         }
@@ -155,19 +110,8 @@ impl IptablesBinding for IptablesCmd {
         self
     }
 
-    fn connbytes_dir<S: AsRef<str>>(&mut self, value: S) -> &mut Self {
-        let value = value.as_ref();
-        self.arg("--connbytes-dir");
-        self.arg(value);
-        self
-    }
-
-    fn connbytes_mode<S: AsRef<str>>(&mut self, value: S) -> &mut Self {
-        let value = value.as_ref();
-        self.arg("--connbytes-mode");
-        self.arg(value);
-        self
-    }
+    add_value_flag!(connbytes_dir, "--connbytes-dir");
+    add_value_flag!(connbytes_mode, "--connbytes-mode");
 
     fn queue_num(&mut self, value: u16) -> &mut Self {
         let value = value.to_string();
