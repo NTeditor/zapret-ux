@@ -1,49 +1,54 @@
 use camino::Utf8PathBuf;
+use iptables::{Port, PortSpec, Protocol};
+use nfqws::FilterMode;
 use serde::{Deserialize, Serialize};
 
-#[cfg(target_os = "android")]
-const DEFAULT_NFQWS_PATH: &str = "/data/adb/modules/zapret-ux/nfqws";
-#[cfg(not(target_os = "android"))]
-const DEFAULT_NFQWS_PATH: &str = "/tmp/nfqws";
-
-#[cfg(target_os = "android")]
-const DEFAULT_IPTABLES_PATH: &str = "/system/bin/iptables";
-#[cfg(not(target_os = "android"))]
-const DEFAULT_IPTABLES_PATH: &str = "/usr/bin/iptables";
-
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct Config {
-    pub nfqws: NfqwsConfig,
-    pub iptables: IptablesConfig,
+    pub iptables: ConfigIptables,
+    pub nfqws: ConfigNfqws,
+    pub mark_supported: bool,
+    pub autostart_enabled: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct NfqwsConfig {
-    pub binary_path: Utf8PathBuf,
-    pub args: Vec<String>,
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ConfigIptables {
+    pub iptables_path: Utf8PathBuf,
+    pub connbytes_supported: bool,
+    pub ports: Vec<PortSpec>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct IptablesConfig {
-    pub binary_path: Utf8PathBuf,
-    pub multiport_support: bool,
-    pub mark_support: bool,
-    pub connbytes_support: bool,
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ConfigNfqws {
+    pub nfqws_path: Utf8PathBuf,
+    pub pgrep_path: Utf8PathBuf,
+    pub pkill_path: Utf8PathBuf,
+    pub filter_mode: FilterMode,
+    pub opt: Vec<String>,
 }
 
-impl Default for Config {
+impl Default for ConfigIptables {
     fn default() -> Self {
         Self {
-            nfqws: NfqwsConfig {
-                binary_path: DEFAULT_NFQWS_PATH.into(),
-                args: Vec::default(),
-            },
-            iptables: IptablesConfig {
-                binary_path: DEFAULT_IPTABLES_PATH.into(),
-                multiport_support: false,
-                connbytes_support: false,
-                mark_support: true,
-            },
+            iptables_path: "iptables".into(),
+            connbytes_supported: false,
+            ports: vec![
+                PortSpec::new(Port::Single(80), Protocol::Tcp),
+                PortSpec::new(Port::Single(443), Protocol::Udp),
+                PortSpec::new(Port::Range(50000, 50099), Protocol::Udp),
+            ],
+        }
+    }
+}
+
+impl Default for ConfigNfqws {
+    fn default() -> Self {
+        Self {
+            nfqws_path: "nfqws".into(),
+            pgrep_path: "pgrep".into(),
+            pkill_path: "pkill".into(),
+            filter_mode: FilterMode::AutoHostFile,
+            opt: Vec::new(),
         }
     }
 }

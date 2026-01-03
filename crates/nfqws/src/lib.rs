@@ -1,14 +1,142 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+mod binding;
+mod enums;
+mod traits;
+
+use anyhow::{Context, Result};
+use binding::*;
+pub use enums::*;
+pub use traits::*;
+
+const QUEUE_NUM: u16 = 200;
+const NFQWS_LOGMODE: &str = "android";
+const FWMARK_VALUE: &str = "0x40000000";
+const UID_VALUE: &str = "0:0";
+const NFQWS_PROCESS_NAME: &str = "nfqws";
+
+#[derive(Debug)]
+pub struct Nfqws<F, PG, PK>
+where
+    F: NfqwsBindingFactory,
+    PG: Fn(&str, &str) -> Result<bool>,
+    PK: Fn(&str, &str) -> Result<()>,
+{
+    nfqws_path: String,
+    pgrep_path: String,
+    pkill_path: String,
+    mark_supported: bool,
+    filter_mode: FilterMode,
+    pgrep: PG,
+    pkill: PK,
+    factory: F,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl Nfqws<NfqwsCmdFactory, fn(&str, &str) -> Result<bool>, fn(&str, &str) -> Result<()>> {
+    pub fn new<S, PG, PK>(
+        nfqws_path: S,
+        pgrep_path: PG,
+        pkill_path: PK,
+        mark_supported: bool,
+        filter_mode: FilterMode,
+    ) -> Self
+    where
+        S: AsRef<str>,
+        PG: AsRef<str>,
+        PK: AsRef<str>,
+    {
+        let nfqws_path = nfqws_path.as_ref();
+        let pgrep_path = pgrep_path.as_ref();
+        let pkill_path = pkill_path.as_ref();
+        let factory = NfqwsCmdFactory;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+        Self {
+            nfqws_path: nfqws_path.to_string(),
+            pgrep_path: pgrep_path.to_string(),
+            pkill_path: pkill_path.to_string(),
+            mark_supported,
+            filter_mode,
+            pgrep: pgrep,
+            pkill: pkill,
+            factory,
+        }
+    }
+}
+
+impl<F, PG, PK> BypassSoftware for Nfqws<F, PG, PK>
+where
+    F: NfqwsBindingFactory,
+    PG: Fn(&str, &str) -> Result<bool>,
+    PK: Fn(&str, &str) -> Result<()>,
+{
+    fn run<I, S>(&self, opt: I) -> Result<()>
+    where
+        S: AsRef<str>,
+        I: IntoIterator<Item = S>,
+    {
+        let mut binding = self.factory.create(&self.nfqws_path);
+        binding
+            .debug(NFQWS_LOGMODE)
+            .daemon()
+            .qnum(QUEUE_NUM)
+            .uid(UID_VALUE);
+        if self.mark_supported {
+            binding.dpi_desync_fwmark(FWMARK_VALUE);
+        }
+        self.parse_opt(&mut binding, opt);
+        binding.run()?;
+        Ok(())
+    }
+
+    fn kill(&self) -> Result<()> {
+        (self.pkill)(&self.pkill_path, NFQWS_PROCESS_NAME)
+            .context("Failed to kill nfqws process")?;
+        Ok(())
+    }
+
+    fn is_running(&self) -> Result<bool> {
+        let is_running = (self.pgrep)(&self.pgrep_path, NFQWS_PROCESS_NAME)
+            .context("Failed to search nfqws process")?;
+        Ok(is_running)
+    }
+}
+
+impl<F, PG, PK> Nfqws<F, PG, PK>
+where
+    F: NfqwsBindingFactory,
+    PG: Fn(&str, &str) -> Result<bool>,
+    PK: Fn(&str, &str) -> Result<()>,
+{
+    fn parse_opt<B: NfqwsBinding, S, I>(&self, binging: &mut B, opt: I)
+    where
+        S: AsRef<str>,
+        I: IntoIterator<Item = S>,
+    {
+        const HOSTLIST_PATH: &str = "/data/adb/zapret-ux/hosts.txt";
+        const HOSTLIST_EXCLUDE_PATH: &str = "/data/adb/zapret-ux/hosts-exclude.txt";
+        const HOSTLIST_AUTO_PATH: &str = "/data/adb/zapret-ux/hosts-auto.txt";
+
+        for arg in opt {
+            let arg = arg.as_ref();
+            if arg == "<FILTER_MODE>" {
+                match self.filter_mode {
+                    FilterMode::AutoHostFile => {
+                        binging
+                            .hostlist(HOSTLIST_PATH)
+                            .hostlist_exclude(HOSTLIST_EXCLUDE_PATH)
+                            .hostlist_auto(HOSTLIST_AUTO_PATH)
+                            .hostlist_auto_fail_threshold(3)
+                            .hostlist_auto_fail_time(60)
+                            .hostlist_auto_retrans_threshold(3);
+                    }
+                    FilterMode::HostFile => {
+                        binging
+                            .hostlist(HOSTLIST_PATH)
+                            .hostlist_exclude(HOSTLIST_EXCLUDE_PATH);
+                    }
+                    FilterMode::None => {}
+                }
+            } else {
+                binging.custom_args([arg]);
+            }
+        }
     }
 }

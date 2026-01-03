@@ -11,6 +11,8 @@ confy = "2.0.0"
 iptables = { version = "0.1.0", path = "crates/iptables" }
 nfqws = { version = "0.1.0", path = "crates/nfqws" }
 serde = { version = "1.0.228", features = ["derive"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["chrono", "env-filter"] }
 
 [workspace]
 members = ["crates/iptables", "crates/nfqws"]
