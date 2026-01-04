@@ -55,10 +55,7 @@ where
             .insert(CHAIN_NAME)
             .protocol(port_spec.protocol.to_str())
             .module(port_spec.protocol.to_str())
-            .dport(&port_spec.port.to_string())
-            .jump("NFQUEUE")
-            .queue_num(QUEUE_NUM)
-            .queue_bypass();
+            .dport(&port_spec.port.to_string());
 
         if self.mark_supported {
             tracing::info!(port_spec = port_spec.to_string(), "Add mark options");
@@ -74,6 +71,7 @@ where
                 .connbytes_mode(CONNBYTES_MODE_VALUE);
         }
 
+        binding.jump("NFQUEUE").queue_num(QUEUE_NUM).queue_bypass();
         binding
             .run()
             .with_context(|| format!("Failed to add port rule for {}", port_spec))?;
