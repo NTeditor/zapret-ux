@@ -8,7 +8,7 @@ pub use enums::*;
 pub use traits::*;
 
 const QUEUE_NUM: u16 = 200;
-const NFQWS_LOGMODE: &str = "android";
+const NFQWS_LOGMODE: &str = "1";
 const FWMARK_VALUE: &str = "0x40000000";
 const UID_VALUE: &str = "0:0";
 const NFQWS_PROCESS_NAME: &str = "nfqws";
@@ -113,9 +113,19 @@ where
         S: AsRef<str>,
         I: IntoIterator<Item = S>,
     {
+        #[cfg(target_os = "android")]
         const HOSTLIST_PATH: &str = "/data/adb/zapret-ux/hosts.txt";
+        #[cfg(target_os = "android")]
         const HOSTLIST_EXCLUDE_PATH: &str = "/data/adb/zapret-ux/hosts-exclude.txt";
+        #[cfg(target_os = "android")]
         const HOSTLIST_AUTO_PATH: &str = "/data/adb/zapret-ux/hosts-auto.txt";
+
+        #[cfg(not(target_os = "android"))]
+        const HOSTLIST_PATH: &str = "/opt/zapret-ux/hosts.txt";
+        #[cfg(not(target_os = "android"))]
+        const HOSTLIST_EXCLUDE_PATH: &str = "/opt/zapret-ux/hosts-exclude.txt";
+        #[cfg(not(target_os = "android"))]
+        const HOSTLIST_AUTO_PATH: &str = "/opt/zapret-ux/hosts-auto.txt";
 
         for arg in opt {
             let arg = arg.as_ref();

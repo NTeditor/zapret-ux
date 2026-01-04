@@ -1,7 +1,30 @@
 use std::process::Command;
 
 use super::{NfqwsBinding, NfqwsBindingFactory};
-use anyhow::{Ok, Result, bail};
+use anyhow::{Result, bail};
+use tracing::debug;
+
+macro_rules! add_value_flag {
+    ($name:ident, $flag:expr) => {
+        fn $name<S: Into<String>>(&mut self, value: S) -> &mut Self {
+            let value = value.into();
+            debug!(flag = $flag, value = value, "Add flag to nfqws command");
+            self.arg($flag);
+            self.arg(value);
+            self
+        }
+    };
+
+    ($name:ident, $flag:expr, $type:ident) => {
+        fn $name(&mut self, value: $type) -> &mut Self {
+            let value = value.to_string();
+            debug!(flag = $flag, value = value, "Add flag to nfqws command");
+            self.arg($flag);
+            self.arg(value);
+            self
+        }
+    };
+}
 
 #[derive(Debug)]
 pub struct NfqwsCmd {
@@ -18,9 +41,9 @@ impl NfqwsCmd {
         }
     }
 
-    fn arg<S: AsRef<str>>(&mut self, arg: S) {
-        let arg = arg.as_ref();
-        self.args.push(arg.to_string());
+    fn arg<S: Into<String>>(&mut self, arg: S) {
+        let arg = arg.into();
+        self.args.push(arg);
     }
 }
 
@@ -57,87 +80,38 @@ impl NfqwsBinding for NfqwsCmd {
         Ok(())
     }
 
-    fn debug<S: AsRef<str>>(&mut self, mode: S) -> &mut Self {
-        let mode = mode.as_ref();
-        self.arg(mode);
-        self
-    }
-
     fn daemon(&mut self) -> &mut Self {
         self.arg("--daemon");
         self
     }
 
-    fn qnum(&mut self, num: u16) -> &mut Self {
-        self.arg("--qnum");
-        self.arg(num.to_string());
-        self
-    }
-
-    fn uid<S: AsRef<str>>(&mut self, uid: S) -> &mut Self {
-        let uid = uid.as_ref();
-        self.arg("--uid");
-        self.arg(uid);
-        self
-    }
-
-    fn dpi_desync_fwmark<S: AsRef<str>>(&mut self, value: S) -> &mut Self {
-        let value = value.as_ref();
-        self.arg("--dpi-desync-fwmark");
-        self.arg(value);
-        self
-    }
-
-    fn hostlist<S: AsRef<str>>(&mut self, path: S) -> &mut Self {
-        let path = path.as_ref();
-        self.arg("--hostlist");
-        self.arg(path);
-        self
-    }
-
-    fn hostlist_exclude<S: AsRef<str>>(&mut self, path: S) -> &mut Self {
-        let path = path.as_ref();
-        self.arg("--hostlist-exclude");
-        self.arg(path);
-        self
-    }
-
-    fn hostlist_auto<S: AsRef<str>>(&mut self, path: S) -> &mut Self {
-        let path = path.as_ref();
-        self.arg("--hostlist-auto");
-        self.arg(path);
-        self
-    }
-
-    fn hostlist_auto_fail_threshold(&mut self, value: u32) -> &mut Self {
-        let value = value.to_string();
-        self.arg("--hostlist-auto-fail-threshold");
-        self.arg(value);
-        self
-    }
-
-    fn hostlist_auto_fail_time(&mut self, value: u32) -> &mut Self {
-        let value = value.to_string();
-        self.arg("--hostlist-auto-fail-time");
-        self.arg(value);
-        self
-    }
-
-    fn hostlist_auto_retrans_threshold(&mut self, value: u32) -> &mut Self {
-        let value = value.to_string();
-        self.arg("--hostlist-auto-retrans-threshold");
-        self.arg(value);
-        self
-    }
+    add_value_flag!(debug, "--debug");
+    add_value_flag!(uid, "--uid");
+    add_value_flag!(dpi_desync_fwmark, "--dpi-desync-fwmark");
+    add_value_flag!(hostlist, "--hostlist");
+    add_value_flag!(hostlist_exclude, "--hostlist-exclude");
+    add_value_flag!(hostlist_auto, "--hostlist-auto");
+    add_value_flag!(qnum, "--qnum", u16);
+    add_value_flag!(
+        hostlist_auto_fail_threshold,
+        "--hostlist-auto-fail-threshold",
+        u32
+    );
+    add_value_flag!(hostlist_auto_fail_time, "--hostlist-auto-fail-time", u32);
+    add_value_flag!(
+        hostlist_auto_retrans_threshold,
+        "--hostlist-auto-retrans-threshold",
+        u32
+    );
 
     fn custom_args<I, S>(&mut self, args: I) -> &mut Self
     where
         I: IntoIterator<Item = S>,
-        S: AsRef<str>,
+        S: Into<String>,
     {
         for arg in args.into_iter() {
-            let arg = arg.as_ref();
-            self.arg(arg.to_string());
+            let arg = arg.into();
+            self.arg(arg);
         }
         self
     }
