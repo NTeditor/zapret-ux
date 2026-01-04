@@ -43,6 +43,12 @@ enum Commands {
     Autostart,
 }
 
+#[cfg(not(any(target_os = "android", target_os = "linux")))]
+fn main() {
+    panic!("Your OS is not android or linux");
+}
+
+#[cfg(any(target_os = "android", target_os = "linux"))]
 fn main() -> Result<()> {
     init_logger();
     let cli = Cli::parse();
@@ -78,24 +84,23 @@ fn main() -> Result<()> {
     );
     match cli.command {
         Commands::Start => {
-            println!("start");
+            println!("Starting daemon");
             iptables.setup_rules(ports)?;
             nfqws.run(opt)?;
         }
         Commands::Stop => {
-            println!("stop");
+            println!("Stoping daemon");
             iptables.clean_rules()?;
             nfqws.kill()?;
         }
         Commands::Restart => {
-            println!("restart");
+            println!("Restarting daemon");
             iptables.clean_rules()?;
             nfqws.kill()?;
             iptables.setup_rules(ports)?;
             nfqws.run(opt)?;
         }
         Commands::Status => {
-            println!("status");
             if nfqws.is_running()? {
                 println!("Daemon is running");
             } else {
@@ -103,7 +108,7 @@ fn main() -> Result<()> {
             }
         }
         Commands::Autostart => {
-            println!("autostart");
+            println!("Зачем выпускать HL3 сегодня, когда есть завтра?");
             if autostart_enabled {
                 iptables.setup_rules(ports)?;
                 nfqws.run(opt)?;
@@ -114,7 +119,12 @@ fn main() -> Result<()> {
 }
 
 fn init_logger() {
-    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+        #[cfg(debug_assertions)]
+        return EnvFilter::new("info");
+        #[cfg(not(debug_assertions))]
+        return EnvFilter::new("warn");
+    });
     let timer = ChronoUtc::new("%H:%M:%S".to_string());
 
     let fmt_layer = fmt::layer()
