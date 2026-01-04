@@ -1,11 +1,13 @@
 mod config;
 
-use anyhow::Result;
+use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
 use config::*;
 use iptables::{FirewallProvider, Iptables};
 use nfqws::{BypassSoftware, Nfqws};
+use rustix::process;
 use std::path::PathBuf;
+use tracing::info;
 use tracing_subscriber::{
     EnvFilter,
     fmt::{self, time::ChronoUtc},
@@ -51,6 +53,7 @@ fn main() {
 #[cfg(any(target_os = "android", target_os = "linux"))]
 fn main() -> Result<()> {
     init_logger();
+    check_root()?;
     let cli = Cli::parse();
     let config: Config = confy::load_path(cli.config)?;
     let Config {
@@ -140,4 +143,14 @@ fn init_logger() {
         .init();
 
     tracing::info!("Logger is initialized");
+}
+
+#[tracing::instrument]
+fn check_root() -> Result<()> {
+    info!("Checking euid..");
+    if !process::geteuid().is_root() {
+        bail!("You are not root user. Your euid: {}", process::geteuid());
+    }
+    info!("User is root");
+    Ok(())
 }

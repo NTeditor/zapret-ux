@@ -11,14 +11,14 @@ pub struct Config {
     pub autostart_enabled: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ConfigIptables {
     pub iptables_path: Utf8PathBuf,
     pub connbytes_supported: bool,
     pub ports: Vec<PortSpec>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ConfigNfqws {
     pub nfqws_path: Utf8PathBuf,
     pub pgrep_path: Utf8PathBuf,
