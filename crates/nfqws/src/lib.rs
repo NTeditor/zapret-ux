@@ -31,22 +31,25 @@ where
 }
 
 impl Nfqws<NfqwsCmdFactory, fn(&str, &str) -> Result<bool>, fn(&str, &str) -> Result<()>> {
-    pub fn new<S, PG, PK>(
+    pub fn new<S, PGS, PKS>(
         nfqws_path: S,
-        pgrep_path: PG,
-        pkill_path: PK,
+        pgrep_path: PGS,
+        pkill_path: PKS,
         mark_supported: bool,
         filter_mode: FilterMode,
     ) -> Self
     where
         S: AsRef<str>,
-        PG: AsRef<str>,
-        PK: AsRef<str>,
+        PGS: AsRef<str>,
+        PKS: AsRef<str>,
     {
         let nfqws_path = nfqws_path.as_ref();
         let pgrep_path = pgrep_path.as_ref();
         let pkill_path = pkill_path.as_ref();
         let factory = NfqwsCmdFactory;
+
+        let pgrep = binding::pgrep;
+        let pkill = binding::pkill;
 
         Self {
             nfqws_path: nfqws_path.to_string(),
@@ -54,8 +57,8 @@ impl Nfqws<NfqwsCmdFactory, fn(&str, &str) -> Result<bool>, fn(&str, &str) -> Re
             pkill_path: pkill_path.to_string(),
             mark_supported,
             filter_mode,
-            pgrep: pgrep,
-            pkill: pkill,
+            pgrep,
+            pkill,
             factory,
         }
     }
