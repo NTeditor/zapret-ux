@@ -165,7 +165,7 @@ pub(crate) fn pkill(pkill_path: &str, process_name: &str) -> Result<()> {
     cmd.arg(process_name);
     let output = cmd.output()?;
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let stderr = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
     let stdout_trim = stdout.trim();
     let stderr_trim = stderr.trim();
     if !output.status.success() {
