@@ -12,7 +12,7 @@ pub use traits::*;
 const QUEUE_NUM: u16 = 200;
 const MARK_VALUE: &str = "0x40000000/0x40000000";
 const CONNBYTES_VALUE: &str = "1:6";
-const CONNBYTES_DIR_VALUE: &str = "origin";
+const CONNBYTES_DIR_VALUE: &str = "original";
 const CONNBYTES_MODE_VALUE: &str = "packets";
 const CHAIN_NAME: &str = "ZAPRET_UX";
 
