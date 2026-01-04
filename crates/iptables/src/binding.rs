@@ -1,16 +1,12 @@
 use super::*;
 use anyhow::Result;
 use std::process::Command;
+use tracing::debug;
 
 macro_rules! add_value_flag {
     ($name:ident, $flag:expr) => {
         fn $name(&mut self, value: &str) -> &mut Self {
-            tracing::info!(
-                flag = $flag,
-                value = value,
-                "Add {} flag to iptables command",
-                stringify!($name),
-            );
+            debug!(flag = $flag, value = value, "Add flag to iptables command",);
             self.arg($flag);
             self.arg(value);
             self
@@ -93,6 +89,12 @@ impl IptablesBinding for IptablesCmd {
     add_value_flag!(dport, "--dport");
 
     fn mark(&mut self, value: &str, invert: Option<bool>) -> &mut Self {
+        debug!(
+            flag = "--mark",
+            value = value,
+            invert = invert,
+            "Add flag to iptables command",
+        );
         if let Some(true) = invert {
             self.arg("!");
         }
@@ -102,6 +104,12 @@ impl IptablesBinding for IptablesCmd {
     }
 
     fn connbytes(&mut self, value: &str, invert: Option<bool>) -> &mut Self {
+        debug!(
+            flag = "--connbytes",
+            value = value,
+            invert = invert,
+            "Add flag to iptables command",
+        );
         if let Some(true) = invert {
             self.arg("!");
         }
@@ -114,6 +122,11 @@ impl IptablesBinding for IptablesCmd {
     add_value_flag!(connbytes_mode, "--connbytes-mode");
 
     fn queue_num(&mut self, value: u16) -> &mut Self {
+        debug!(
+            flag = "--queue-num",
+            value = value,
+            "Add flag to iptables command",
+        );
         let value = value.to_string();
         self.arg("--queue-num");
         self.arg(value);
@@ -121,6 +134,7 @@ impl IptablesBinding for IptablesCmd {
     }
 
     fn queue_bypass(&mut self) -> &mut Self {
+        debug!(flag = "--queue-bypass", "Add flag to iptables command");
         self.arg("--queue-bypass");
         self
     }
@@ -130,7 +144,7 @@ pub struct IptablesCmdFactory;
 impl IptablesBindingFactory for IptablesCmdFactory {
     type Binding = IptablesCmd;
     fn create(&self, iptables_file: &str) -> Self::Binding {
-        tracing::debug!(
+        debug!(
             iptables_file = iptables_file,
             "Creating new IptablesCmd instance with factory"
         );
